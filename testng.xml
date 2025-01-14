@@ -1,0 +1,14 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="TestAll">
+    <listeners>
+<!--        <listener class-name="xray.listeners.XrayListener"/>-->
+        <listener class-name="xray.listeners.XrayJsonReporter"/>
+    </listeners>
+    <test name="Report">
+        <classes>
+<!--            <class name="xray.AppTest" />-->
+            <class name="xray.SubAppTest" />
+        </classes>
+    </test>
+</suite>
