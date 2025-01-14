@@ -5,18 +5,32 @@ import java.io.IOException;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import lombok.Getter;
-import org.apache.commons.lang3.StringUtils;
+import java.util.Base64;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
+
+import static org.apache.commons.lang3.StringUtils.getIfBlank;
+
+@Getter @Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Evidence {
 
+    @JsonIgnore
     private File attachment;
-    @Getter
+    @JsonProperty(value = "filename")
     private String fileName;
-    @Getter
-    private byte[] base64File;
-    @Getter
+    @JsonProperty(value = "data")
+    private String base64File;
     private String contentType;
+
+    public Evidence (String filePath) throws IOException {
+        attachment = new File(filePath);
+        processAttachment();
+    }
 
     public Evidence (String fileName, String filePath) throws IOException {
         attachment = new File(filePath);
@@ -24,24 +38,16 @@ public class Evidence {
         processAttachment();
     }
 
-    public Evidence (String fileName, String filePath, String contentType) throws IOException {
-        attachment = new File(filePath);
-        this.fileName = fileName;
-        this.contentType = contentType;
-        processAttachment();
-    }
-
     private void processAttachment() throws IOException {
-        if (attachment.exists()) {
+        if (attachment.exists() && attachment.isFile()) {
+            fileName = getIfBlank(fileName, () -> attachment.getName());
+            contentType = URLConnection.guessContentTypeFromName(attachment.getName());
             encodeFile();
-            if(StringUtils.isBlank(contentType))
-                contentType =
-                URLConnection.guessContentTypeFromName(attachment.getName());
         }
     }
 
     private void encodeFile() throws IOException {
         byte[] inFileBytes = Files.readAllBytes(Paths.get(attachment.toURI()));
-        base64File = java.util.Base64.getEncoder().encode(inFileBytes);
+        base64File = Base64.getMimeEncoder().encodeToString(inFileBytes);
     }
 }

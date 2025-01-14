@@ -35,5 +35,5 @@ public @interface XrayTest {
 
      @return a {@code String} containing the labels (one or more)
      */
-    String labels() default "";
+    String[] labels() default {};
 }

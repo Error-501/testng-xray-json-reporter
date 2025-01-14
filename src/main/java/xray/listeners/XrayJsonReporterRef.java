@@ -49,87 +49,6 @@ public class XrayJsonReporterRef implements IReporter, IExecutionListener, IInvo
     private long executionsFinishedAt;
 
 
-
-    @Override
-    public void beforeInvocation(IInvokedMethod method, ITestResult testResult) {
-        */
-/*
-        String methodName = method.getTestMethod().getMethodName();
-        System.out.println("getTestResult().getName()     - " + method.getTestResult().getName());
-        System.out.println("getTestResult().getTestName() - " + method.getTestResult().getTestName());
-        System.out.println("getTestResult().getInstanceName() - " + method.getTestResult().getInstanceName());
-        System.out.println("getTestResult().getInstanceName() - " + method.getTestResult().getInstance());
-        System.out.println("\n");
-        *//*
-
-    }
-
-
-    private void loadConfigPropertiesFile() {
-        try {
-
-            InputStream stream = null;
-            if (DEFAULT_XRAY_PROPERTIES_FILE.equals(this.propertiesFile))  {
-                stream = getClass().getClassLoader().getResourceAsStream(this.propertiesFile);
-            } else {
-                stream = new FileInputStream(this.propertiesFile);
-            }
-            
-			// if properties exist, or are enforced from the test, then process them
-			if (stream != null) {
-				Properties properties = new Properties();
-				properties.load(stream);
-
-				String user = properties.getProperty("user");
-				if (!emptyString(user)) {
-                    this.config.setUser(user);
-				}
-
-				String summary = properties.getProperty("summary");
-				if (!emptyString(summary)) {
-                    this.config.setSummary(summary);
-				}
-				String description = properties.getProperty("description");
-				if (!emptyString(description)) {
-                    this.config.setDescription(description);
-				}
-				String projectKey = properties.getProperty("project_key");
-                System.out.println("Project Key \n " + projectKey);
-				if (!emptyString(projectKey)) {
-                    this.config.setProjectKey(projectKey);
-				}
-                String version = properties.getProperty("version");
-				if (!emptyString(version)) {
-                    this.config.setVersion(version);
-				}
-                String revision = properties.getProperty("revision");
-				if (!emptyString(revision)) {
-                    this.config.setRevision(revision);  
-				}
-                String testExecutionKey = properties.getProperty("testexecution_key");
-				if (!emptyString(testExecutionKey)) {
-                    this.config.setTestExecutionKey(testExecutionKey);  
-				}
-                String testPlanKey = properties.getProperty("testplan_key");
-				if (!emptyString(testPlanKey)) {
-                    this.config.setTestPlanKey(testPlanKey);   
-				}
-                String testEnvironments = properties.getProperty("test_environments");
-				if (!emptyString(testEnvironments)) {
-					this.config.setTestEnvironments(testEnvironments);
-				}
-				
-                this.config.setXrayCloud(!"false".equals(properties.getProperty("xray_cloud")));  // true, if not specified
-                this.config.setUseManualTestsForDatadrivenTests(!"false".equals(properties.getProperty("use_manual_tests_for_datadriven_tests"))); // true, if not specified
-                this.config.setUseManualTestsForRegularTests("true".equals(properties.getProperty("use_manual_tests_for_regular_tests"))); // false, if not specified
-                this.config.setReportOnlyAnnotatedTests("true".equals(properties.getProperty("report_only_annotated_tests"))); // false, if not specified
-			}
-        } catch (Exception e) {
-            System.err.println("error loading listener configuration from properties files");
-		}
-
-    }
-
     @Override
     public void generateReport(List<XmlSuite> xmlSuites, List<ISuite> suites, String outputDirectory) {
         // hack: the onExecutionFinish() callback seems to be called but the value is not set; maybe a concurrency issue?
@@ -239,16 +158,6 @@ public class XrayJsonReporterRef implements IReporter, IExecutionListener, IInvo
         return parameterNames;
     }
 
-    @Override
-    public void onExecutionStart() {
-      this.executionsStartedAt = System.currentTimeMillis();
-    }
-
-    @Override
-    public void onExecutionFinish() {
-      this.executionsFinishedAt = System.currentTimeMillis();
-    }
-
     private void addTestResults(JSONArray tests, ArrayList<ITestResult> results){
         String xrayTestKey = null;
         String xrayTestSummary = null;
@@ -286,12 +195,7 @@ public class XrayJsonReporterRef implements IReporter, IExecutionListener, IInvo
                     xrayTestKey = testKey;
                     test.put("testKey", testKey);
                 }
-                    
-                String labels = method.getAnnotation(XrayTest.class).labels();
-                if (!emptyString(labels)) {
-                    ArrayList<String> labelsArray = new ArrayList<>(Arrays.asList(labels.split(" ")));
-                    testInfo.put("labels", labelsArray);
-                }    
+
                 xrayTestSummary = method.getAnnotation(XrayTest.class).summary();
                 xrayTestDescription = method.getAnnotation(XrayTest.class).description();
             }
@@ -404,8 +308,6 @@ public class XrayJsonReporterRef implements IReporter, IExecutionListener, IInvo
                     actualResult = sw.toString();
                 }
 
-                */
-/*
                 [ERROR] givenNumberFromDataProvider_ifEvenCheckOK_thenCorrect[5, true](com.baeldung.ParametrizedLongRunningUnitTest)  Time elapsed: 0.009 s  <<< FAILURE!
                 java.lang.AssertionError: expected [false] but found [true]
 	                at com.baeldung.ParametrizedLongRunningUnitTest.givenNumberFromDataProvider_ifEvenCheckOK_thenCorrect(ParametrizedLongRunningUnitTest.java:34)
@@ -420,7 +322,7 @@ public class XrayJsonReporterRef implements IReporter, IExecutionListener, IInvo
                  *    java.lang.AssertionError: expected [false] but found [true]
 	             *      at com.baeldung.ParametrizedLongRunningUnitTest.givenNumberFromDataProvider
                  *      ... (full trace)...
-                 *//*
+
 
                 dummyStep.put("actualResult", actualResult);
                 dummyStep.put("status", getTestStatus(result.getStatus()));
@@ -440,8 +342,8 @@ public class XrayJsonReporterRef implements IReporter, IExecutionListener, IInvo
                 if (result.getStatus() == ITestResult.FAILURE)
                     totalFailed++;         
             }
-            test.put("iterations", i*/
-/**//*
+            test.put("iterations", i
+
 terations);
             if (totalFailed > 0)
              test.put("status", getTestStatus(ITestResult.FAILURE));
@@ -491,30 +393,6 @@ terations);
             default:
                 return "EXECUTING";
             }    
-    }
-
-    private void addAllTestResults(Set<ITestResult> testResults, IResultMap resultMap) {
-        if (resultMap != null) {
-          // Sort the results chronologically before adding them
-          testResults.addAll(
-              resultMap.getAllResults().stream()
-                  .sorted((o1, o2) -> (int) (o1.getStartMillis() - o2.getStartMillis()))
-                  .collect(Collectors.toCollection(LinkedHashSet::new)));
-        }
-    }
-
-
-    private void saveReport(String outputDirectory, JSONObject report) {
-        new File(outputDirectory).mkdirs();
-        try (PrintWriter reportWriter = new PrintWriter(new BufferedWriter(new FileWriter(new File(outputDirectory, config.getReportFilename()))))){
-            reportWriter.println(report.toJSONString());
-        } catch (IOException e) {
-            System.err.println("Problem saving report " + e);
-        }
-    }
-
-    public void usePropertiesFile(String propertiesFile) {
-        this.propertiesFile = propertiesFile;
     }
 
     private String getContentTypeFor(File file) {
