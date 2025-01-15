@@ -9,7 +9,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.nio.file.Files;
@@ -29,7 +28,7 @@ import org.testng.ITestContext;
 import org.testng.ITestResult;
 import org.testng.annotations.Test;
 import org.testng.xml.XmlSuite;
-import utils.PropertyHandler;
+import commons.PropertyHandler;
 import xray.annotations.XrayTest;
 import xray.json.model.execution.TestExecution;
 import xray.json.model.execution.TestExecutionInfo;
@@ -205,8 +204,8 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
     }
 
     private List<CustomField> getCustomIterationFields(int totalPassed, int totalFailed) {
-        CustomField iterationsPassed = new CustomField(null, ITERATIONS_PASSED_FIELD_NAME, totalPassed);
-        CustomField iterationsFailed = new CustomField(null, ITERATIONS_FAILED_FIELD_NAME, totalFailed);
+        CustomField iterationsPassed = new CustomField("", ITERATIONS_PASSED_FIELD_NAME, totalPassed);
+        CustomField iterationsFailed = new CustomField("", ITERATIONS_FAILED_FIELD_NAME, totalFailed);
         return Arrays.asList(iterationsPassed,iterationsFailed);
     }
 
@@ -347,6 +346,7 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
     public void onExecutionFinish() {
         XrayApiHandler xrayApi = XrayApiHandler.getXrayApiHandler();
         try {
+            PropertyHandler.validateXrayJsonSchema(outputDirectory + get(REPORT_FILENAME));
             xrayApi.importTestExecutions(outputDirectory);
         } catch (IOException e) {
             throw new RuntimeException(e);

@@ -15,6 +15,11 @@ import lombok.Setter;
 
 import static org.apache.commons.lang3.StringUtils.getIfBlank;
 
+/**
+ * The Evidence Object attached to TestRun Objects.<p>
+ * This will count towards Xray storage. -
+ * <a href="https://docs.getxray.app/display/XRAYCLOUD/Tips+for+Managing+your+Xray+Storage">Ref</a>
+ */
 @Getter @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Evidence {
