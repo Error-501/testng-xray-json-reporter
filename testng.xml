@@ -7,8 +7,8 @@
     </listeners>
     <test name="Report">
         <classes>
-<!--            <class name="xray.AppTest" />-->
-            <class name="xray.SubAppTest" />
+            <class name="xray.dummytests.AppTest" />
+            <class name="xray.dummytests.SubAppTest" />
         </classes>
     </test>
 </suite>
