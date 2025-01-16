@@ -7,6 +7,8 @@ import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.form.FormEncoder;
+import feign.form.spring.SpringFormEncoder;
 import feign.gson.GsonDecoder;
 import feign.gson.GsonEncoder;
 import feign.okhttp.OkHttpClient;
@@ -38,10 +40,20 @@ public class FeignClientConfiguration {
                 .target(clientClass, endPoint);
     }
 
-    public <T> T getJsonFormBuilder(Class<T> clientClass, String endPoint) {
+    public <T> T getFileBinaryBuilder(Class<T> clientClass, String endPoint) {
         return Feign.builder()
                 .client(new OkHttpClient())
                 .encoder(new SimpleFileEncoder())
+                .decoder(new GsonDecoder())
+                .logger(new Slf4jLogger(clientClass))
+                .logLevel(Logger.Level.FULL)
+                .target(clientClass, endPoint);
+    }
+
+    public <T> T getFormBuilder(Class<T> clientClass, String endPoint) {
+        return Feign.builder()
+                .client(new OkHttpClient())
+                .encoder(new FormEncoder(new GsonEncoder()))
                 .decoder(new GsonDecoder())
                 .logger(new Slf4jLogger(clientClass))
                 .logLevel(Logger.Level.FULL)
@@ -53,15 +65,18 @@ public class FeignClientConfiguration {
     }
 
     public XrayCloud getXrayFileClient() {
-        return getJsonFormBuilder(XrayCloud.class, props.getProperty(XRAY_CLOUD_API_ENDPOINT));
+        return getFileBinaryBuilder(XrayCloud.class, props.getProperty(XRAY_CLOUD_API_ENDPOINT));
+    }
+
+    public XrayCloud getXrayFormClient() {
+        return getFormBuilder(XrayCloud.class, props.getProperty(XRAY_CLOUD_API_ENDPOINT));
     }
 
     public static class SimpleFileEncoder implements Encoder {
-
         public void encode(Object object, Type type, RequestTemplate template)
                 throws EncodeException {
             template.body(Request.Body.encoded(
-                    (byte[]) ((Map) object).get("file"), UTF_8));
+                    (byte[]) ((Map<?, ?>) object).get("file"), UTF_8));
         }
     }
 }

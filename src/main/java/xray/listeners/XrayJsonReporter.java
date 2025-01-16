@@ -327,6 +327,7 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
         File reportFile = new File(outputDirectory, get(REPORT_FILENAME));
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(reportFile))) {
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(writer, testExecution);
+            writer.flush();
         } catch (IOException e) {
             //TODO Logger
             System.err.println("Error in BufferedWriter due to " +  e);
@@ -345,9 +346,10 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
     @Override
     public void onExecutionFinish() {
         XrayApiHandler xrayApi = XrayApiHandler.getXrayApiHandler();
+        Path reportFilePath = Path.of(outputDirectory + get(REPORT_FILENAME));
         try {
-            PropertyHandler.validateXrayJsonSchema(outputDirectory + get(REPORT_FILENAME));
-            xrayApi.importTestExecutions(outputDirectory);
+            PropertyHandler.validateXrayJsonSchema(reportFilePath.toString());
+            xrayApi.importTestExecutions(reportFilePath.toString());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

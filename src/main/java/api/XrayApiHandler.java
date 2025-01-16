@@ -20,14 +20,15 @@ public class XrayApiHandler {
 
     private final String AUTH_TOKEN;
     private final XrayCloud xrayCloudApi;
-    private final XrayCloud xrayCloudFileApi;
+    private XrayCloud xrayCloudFileApi;
+    private XrayCloud xrayCloudFormApi;
     private final Properties props;
     private static XrayApiHandler xrayApiHandler;
+    private final FeignClientConfiguration feign;
 
     private XrayApiHandler() {
-        FeignClientConfiguration feign = new FeignClientConfiguration();
+        feign = new FeignClientConfiguration();
         xrayCloudApi = feign.getXrayClient();
-        xrayCloudFileApi = feign.getXrayFileClient();
         props = PropertyHandler.loadConfigPropertiesFile();
         AuthenticateReq authenticateReq = new AuthenticateReq(props.getProperty("clientId"), props.getProperty("clientSecret"));
         AUTH_TOKEN = "Bearer " + xrayCloudApi.getAuthToken(authenticateReq);
@@ -40,8 +41,9 @@ public class XrayApiHandler {
         return xrayApiHandler;
     }
 
-    public void importTestExecutions(String outputDirectory) throws IOException {
-        Path report = Path.of(outputDirectory,props.getProperty(REPORT_FILENAME));
+    public void importTestExecutions(String testReportFilePath) throws IOException {
+        xrayCloudFileApi = feign.getXrayFileClient();
+        Path report = Path.of(testReportFilePath);
         Map<String, Object> headers = new HashMap<>();
         if(report.toFile().exists()) {
             String contentType = URLConnection.guessContentTypeFromName(String.valueOf(report.getFileName()));
@@ -56,7 +58,21 @@ public class XrayApiHandler {
         }
     }
 
-    public void importMultiPartExecution(){
-
+    public void importMultiPartExecution(String testExecFilePath, String execInfoFilePath) throws IOException {
+        xrayCloudFileApi = feign.getXrayFormClient();
+        Path report = Path.of(testExecFilePath);
+        Path execInfo = Path.of(execInfoFilePath);
+        Map<String, Object> headers = new HashMap<>();
+        if(report.toFile().exists() && execInfo.toFile().exists()) {
+            String contentType = URLConnection.guessContentTypeFromName(String.valueOf(report.getFileName()));
+            headers.put("Content-Type", contentType);
+            headers.put("Authorization", AUTH_TOKEN);
+            Response response = xrayCloudFileApi.importMultiPartExecution(headers, report.toFile(), execInfo.toFile());
+            System.out.println(response.status());
+            System.out.println(response);
+        }
+        else {
+            throw new IOException("XRAY Json Report: "+report+" is not found");
+        }
     }
 }

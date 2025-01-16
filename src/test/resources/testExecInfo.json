@@ -1,0 +1,19 @@
+{
+    "fields": {
+        "project": {
+            "id": "10004"
+        },
+        "summary": "Brand new Test execution",
+        "issuetype": {
+            "id": "10012"
+        },
+        "components" : [
+            {
+            "name":"Interface"
+            },
+            {
+            "name":"Core"
+            }
+        ]
+    }
+}
