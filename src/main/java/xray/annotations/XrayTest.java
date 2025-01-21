@@ -10,30 +10,30 @@ import java.lang.annotation.RetentionPolicy;
 public @interface XrayTest {
 
     /**
-     Summary for the Test issue
-
-     @return a {@code String} containing the Summary's text
+     * Summary for the Test issue
+     *
+     * @return a {@code String} containing the Summary's text
      */
     String summary() default "";
 
     /**
-     Description for the Test issue
-
-     @return a {@code String} containing the Description's text
+     * Description for the Test issue
+     *
+     * @return a {@code String} containing the Description's text
      */
     String description() default "";
 
     /**
-     issue key of the Test issue to report the results to
-
-     @return a {@code String} containing the Summary's text
+     * issue key of the Test issue to report the results to
+     *
+     * @return a {@code String} containing the Summary's text
      */
     String key() default "";
 
     /**
-     labels, delimited by space, for the Test issue
-
-     @return a {@code String} containing the labels (one or more)
+     * labels, delimited by space, for the Test issue
+     *
+     * @return a {@code String} containing the labels (one or more)
      */
     String[] labels() default {};
 }

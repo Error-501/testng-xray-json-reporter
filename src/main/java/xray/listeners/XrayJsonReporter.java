@@ -1,13 +1,26 @@
 package xray.listeners;
 
-import static org.apache.commons.lang3.StringUtils.*;
-import static xray.Constants.*;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.testng.*;
+import org.testng.annotations.Test;
+import org.testng.xml.XmlSuite;
+import xray.annotations.XrayTest;
+import xray.api.handler.XrayApiHandler;
+import xray.commons.JsonHandler;
+import xray.json.model.execution.TestExecution;
+import xray.json.model.execution.TestExecutionInfo;
+import xray.json.model.execution.TestRun;
+import xray.json.model.execution.TestStepResult;
+import xray.json.model.jira.IssueFields;
+import xray.json.model.jira.IssueType;
+import xray.json.model.jira.ProjectField;
+import xray.json.model.misc.CustomField;
+import xray.json.model.misc.TestStatus;
+import xray.json.model.misc.TestType;
+import xray.json.model.test.Iteration;
+import xray.json.model.test.TestCase;
+import xray.json.model.test.TestStep;
 
-import api.XrayApiHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -17,56 +30,34 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.SerializationFeature;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.testng.IExecutionListener;
-import org.testng.IReporter;
-import org.testng.IResultMap;
-import org.testng.ISuite;
-import org.testng.ISuiteResult;
-import org.testng.ITestContext;
-import org.testng.ITestResult;
-import org.testng.annotations.Test;
-import org.testng.xml.XmlSuite;
-import commons.PropertyHandler;
-import xray.annotations.XrayTest;
-import xray.json.model.execution.TestExecution;
-import xray.json.model.execution.TestExecutionInfo;
-import xray.json.model.execution.TestRun;
-import xray.json.model.execution.TestStepResult;
-import xray.json.model.misc.CustomField;
-import xray.json.model.misc.TestStatus;
-import xray.json.model.misc.TestType;
-import xray.json.model.test.Iteration;
-import xray.json.model.test.TestCase;
-import xray.json.model.test.TestStep;
+import static org.apache.commons.lang3.StringUtils.*;
+import static xray.api.handler.JiraApiHandler.getJiraApiHandler;
+import static xray.commons.Constants.*;
+import static xray.commons.JsonHandler.writeJsonFileFromObject;
 
 public class XrayJsonReporter implements IReporter, IExecutionListener {
-
-    public static final ObjectMapper objectMapper = new ObjectMapper();
     private Properties xrayProps = null;
     private Date executionStartDate;
     private Date executionEndDate;
     private TestExecutionInfo testExecutionInfo;
     private TestExecution testExecution;
     SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_TIME_FORMAT);
-    private String outputDirectory;
+    private Path reportFilePath;
+    private Path execInfoPath;
 
 
     @Override
     public void generateReport(List<XmlSuite> xmlSuites, List<ISuite> suites, String outputDirectory) {
-        this.outputDirectory = outputDirectory;
         executionEndDate = Calendar.getInstance().getTime();
         testExecution = new TestExecution();
-        xrayProps = PropertyHandler.loadConfigPropertiesFile();
+        xrayProps = JsonHandler.loadConfigPropertiesFile();
         boolean reportOnlyAnnotatedTest = (boolean) xrayProps.getOrDefault(REPORT_ONLY_ANNOTATED, false);
 
-        if(isNotBlank(get(PROJECT_KEY))) {
+        if (isNotBlank(get(PROJECT_KEY))) {
             testExecutionInfo =
-                new TestExecutionInfo(get(PROJECT_KEY), executionStartDate, executionEndDate);
+                    new TestExecutionInfo(get(PROJECT_KEY), executionStartDate, executionEndDate);
             setTestExecutionInfoProps();
-        }
-        else if(isNotBlank(get(TEST_EXECUTION_KEY))) {
+        } else if (isNotBlank(get(TEST_EXECUTION_KEY))) {
             throw new IllegalArgumentException("projectKey or TestExecution Key must " +
                     "be specified in Xray.properties to create XRAY JSON Reports");
         }
@@ -86,8 +77,8 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
             testExecution.setTestExecutionInfo(testExecutionInfo);
             testExecution.setTests(tests);
             serializeReport(outputDirectory);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not create the JSON Report File " + e);
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Could not create the JSON Report File %s %s", e.getCause(), e.getMessage()));
         }
     }
 
@@ -99,13 +90,13 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
         testExecutionInfo.setVersion(getIfBlank(get(TEST_EXECUTION_VERSION), () -> null));
     }
 
-    private TestRun createTestRun(List<ITestResult> results){
+    private TestRun createTestRun(List<ITestResult> results) {
         TestRun testRun = new TestRun();
         ITestResult firstResult = results.get(0);
         Method testMethod = firstResult.getMethod().getConstructorOrMethod().getMethod();
         if (testMethod.isAnnotationPresent(XrayTest.class)
                 && isNotBlank(testMethod.getAnnotation(XrayTest.class).key())) {
-                testRun.setTestKey(testMethod.getAnnotation(XrayTest.class).key());
+            testRun.setTestKey(testMethod.getAnnotation(XrayTest.class).key());
         }
         if (isBlank(testRun.getTestKey())) {
             testRun.setTestInfo(createTestCase(results, testMethod));
@@ -115,7 +106,7 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
         int totalFailed = 0;
         //if test is not parameterized / data driven
         if (results.size() == 1) {
-            ITestResult result =  results.get(0);
+            ITestResult result = results.get(0);
             testRun.setStart(dateFormatter.format(result.getStartMillis()));
             testRun.setFinish(dateFormatter.format(result.getEndMillis()));
             testRun.setStatus(Objects.requireNonNull(
@@ -125,12 +116,10 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
                     && throwable != null && throwable.getMessage() != null) {
                 testRun.setComment(throwable.getMessage());
                 totalFailed += 1;
-            }
-            else {
+            } else {
                 totalPassed += 1;
             }
-        }
-        else {
+        } else {
             // TODO: this should be based not on the first result but on the start & end time of all iterations
             String start = dateFormatter.format(firstResult.getStartMillis());
             String finish = dateFormatter.format(firstResult.getEndMillis());
@@ -139,7 +128,7 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
 
             List<Iteration> iterations = new ArrayList<>();
             int counter = 1;
-            for (ITestResult result: results) {
+            for (ITestResult result : results) {
                 Iteration iteration = new Iteration();
                 iteration.setName(getTestUniqueKey(testMethod,
                         result.getMethod().getQualifiedName())
@@ -151,14 +140,14 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
                     List<String> parameterNames = null;
                     try {
                         parameterNames = getParameterNames(result.getMethod().getConstructorOrMethod().getMethod());
-                    } catch (Exception ex ){
+                    } catch (Exception ex) {
                         System.err.println("problem getting parameter names" + ex);
                     }
-                    for (Object param: params) {
+                    for (Object param : params) {
                         Map<String, String> parameter = new HashMap<>();
                         String paramName = "param" + count;
                         if (parameterNames != null)
-                            paramName = parameterNames.get(count-1);
+                            paramName = parameterNames.get(count - 1);
                         parameter.put("name", paramName);
                         parameter.put("value", param.toString());
                         parameters.add(parameter);
@@ -190,8 +179,8 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
             }
             testRun.setIterations(iterations);
             if (totalFailed > 0)
-               testRun.setStatus(Objects.requireNonNull(
-                       TestStatus.getStatus(ITestResult.FAILURE)).name());
+                testRun.setStatus(Objects.requireNonNull(
+                        TestStatus.getStatus(ITestResult.FAILURE)).name());
             else if (totalPassed == iterations.size())
                 testRun.setStatus(Objects.requireNonNull(
                         TestStatus.getStatus(ITestResult.SUCCESS)).name());
@@ -204,9 +193,9 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
     }
 
     private List<CustomField> getCustomIterationFields(int totalPassed, int totalFailed) {
-        CustomField iterationsPassed = new CustomField("", ITERATIONS_PASSED_FIELD_NAME, totalPassed);
-        CustomField iterationsFailed = new CustomField("", ITERATIONS_FAILED_FIELD_NAME, totalFailed);
-        return Arrays.asList(iterationsPassed,iterationsFailed);
+        CustomField iterationsPassed = new CustomField(null, ITERATIONS_PASSED_FIELD_NAME, totalPassed);
+        CustomField iterationsFailed = new CustomField(null, ITERATIONS_FAILED_FIELD_NAME, totalFailed);
+        return Arrays.asList(iterationsPassed, iterationsFailed);
     }
 
     private static List<String> getParameterNames(Method method) {
@@ -214,7 +203,7 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
         List<String> parameterNames = new ArrayList<>();
 
         for (Parameter parameter : parameters) {
-            if(!parameter.isNamePresent()) {
+            if (!parameter.isNamePresent()) {
                 //TODO: log warn or lower level
                 throw new IllegalArgumentException("Parameter names are not present!");
             }
@@ -231,7 +220,7 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
         // For Generic tests - Generic Test Definition, Manual - Summary
         String testName = results.get(0).getMethod().getQualifiedName();
         String testUniqueId = getTestUniqueKey(testMethod, testName);
-        if(testMethod.isAnnotationPresent(XrayTest.class)) {
+        if (testMethod.isAnnotationPresent(XrayTest.class)) {
             testCase.setLabels(Arrays.asList(testMethod.getAnnotation(XrayTest.class).labels()));
         }
         testCase.setSummary(testUniqueId);
@@ -241,8 +230,7 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
             testCase.setType(TestType.MANUAL);
             testCase.setSteps(Collections.singletonList(
                     new TestStep(testName, "", "ok")));
-        }
-        else {
+        } else {
             testCase.setType(TestType.GENERIC);
             testCase.setDefinition(testUniqueId);
         }
@@ -260,7 +248,8 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
      *        2. Unique Tag / FQN + Xray Tag Description
      *        3. Unique Tag / FQN + TestNg Annotation Description
      *        4. Unique Tag + FQN
-     *</pre>
+     * </pre>
+     *
      * @param testMethod the test method to generate unique id for.
      * @return Unique value to identify the test in xray on auto-provision.
      */
@@ -283,9 +272,9 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
         }
         testSummary += isNotBlank(xrayTestSummary) ? xrayTestSummary :
                 isNotBlank(xrayTestDescription) ? xrayTestDescription :
-                isNotBlank(testNgDescription) ? testNgDescription : testName;
+                        isNotBlank(testNgDescription) ? testNgDescription : testName;
         return uniqueTag.isPresent() ?
-                String.format("[%s] %s", uniqueTag.get(),testSummary) : testSummary;
+                String.format("[%s] %s", uniqueTag.get(), testSummary) : testSummary;
     }
 
     public HashMap<String, ArrayList<ITestResult>> getTestResultsFromSuite(List<ISuite> suites) {
@@ -320,18 +309,26 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
         }
     }
 
-    private void serializeReport(String outputDirectory) throws IOException {
-        objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
-        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+    private void serializeReport(String outputDirectory) throws Exception {
         Files.createDirectories(Path.of(outputDirectory));
-        File reportFile = new File(outputDirectory, get(REPORT_FILENAME));
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(reportFile))) {
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(writer, testExecution);
-            writer.flush();
-        } catch (IOException e) {
-            //TODO Logger
-            System.err.println("Error in BufferedWriter due to " +  e);
+        reportFilePath = Path.of(outputDirectory, get(REPORT_FILENAME));
+        if (get(MULTIPART_IMPORT).equalsIgnoreCase("true")) {
+            execInfoPath = Path.of(outputDirectory, get(REPORT_EXEC_INFO_FILENAME));
+            createMultiPartExecutionInfo(execInfoPath.toString());
         }
+        writeJsonFileFromObject(reportFilePath.toString(), testExecution);
+    }
+
+    private void createMultiPartExecutionInfo(String outputFilePath) throws IOException {
+        Path jsonRequest = Path.of(outputFilePath);
+        Files.createDirectories(jsonRequest.getParent());
+        IssueFields issue = new IssueFields();
+        issue.setProject(new ProjectField(
+                getJiraApiHandler(get(PROJECT_KEY)).getProjectId()));
+        issue.setIssueType(new IssueType("Test Execution"));
+        issue.setSummary(get(TEST_EXECUTION_SUMMARY));
+        issue.setDescription(get(TEST_EXECUTION_DESCRIPTION));
+        writeJsonFileFromObject(outputFilePath, issue);
     }
 
     public String get(String props) {
@@ -346,10 +343,13 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
     @Override
     public void onExecutionFinish() {
         XrayApiHandler xrayApi = XrayApiHandler.getXrayApiHandler();
-        Path reportFilePath = Path.of(outputDirectory + get(REPORT_FILENAME));
         try {
-            PropertyHandler.validateXrayJsonSchema(reportFilePath.toString());
-            xrayApi.importTestExecutions(reportFilePath.toString());
+            JsonHandler.validateXrayJsonSchema(reportFilePath.toString());
+            if (get(MULTIPART_IMPORT).equalsIgnoreCase("true")) {
+                xrayApi.importMultiPartExecution(reportFilePath.toString(), execInfoPath.toString());
+            } else {
+                xrayApi.importTestExecutions(reportFilePath.toString());
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

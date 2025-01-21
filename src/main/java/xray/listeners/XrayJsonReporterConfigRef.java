@@ -3,7 +3,7 @@ package xray.listeners;
 import org.testng.reporters.IReporterConfig;
 
 public class XrayJsonReporterConfigRef implements IReporterConfig {
- 
+
 
     /**
      * User id to assign as the reporter of the Test Execution issue. Defaults to the user implicitly
@@ -15,7 +15,7 @@ public class XrayJsonReporterConfigRef implements IReporterConfig {
      * Text to set as the description field on the Test Execution issue. Default is "test automation results".
      */
     private String summary = DEFAULT_TESTEXECUTION_SUMMARY;
-    
+
     public static final String DEFAULT_TESTEXECUTION_SUMMARY = "test automation results";
 
     /**
@@ -24,7 +24,7 @@ public class XrayJsonReporterConfigRef implements IReporterConfig {
     private String description = "";
 
     /**
-     * Key of Jira projected where Test Execution, and eventually Test issues, will be created in. 
+     * Key of Jira projected where Test Execution, and eventually Test issues, will be created in.
      */
     private String projectKey = "";
 
@@ -66,7 +66,7 @@ public class XrayJsonReporterConfigRef implements IReporterConfig {
      * Indicates that "Manual" (i.e., step based tests) should be used during autoprovisioning
      * of "regular, non data-driven, tests. If false, "Generic" (i.e., unstructured) tests will
      * be used. Defaults to false.
-     */ 
+     */
     private boolean useManualTestsForRegularTests = false;
 
 

@@ -1,17 +1,16 @@
 package xray.json.model.misc;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.Setter;
 
 import static org.apache.commons.lang3.StringUtils.getIfBlank;
 
@@ -20,7 +19,8 @@ import static org.apache.commons.lang3.StringUtils.getIfBlank;
  * This will count towards Xray storage. -
  * <a href="https://docs.getxray.app/display/XRAYCLOUD/Tips+for+Managing+your+Xray+Storage">Ref</a>
  */
-@Getter @Setter
+@Getter
+@Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Evidence {
 
@@ -32,12 +32,12 @@ public class Evidence {
     private String base64File;
     private String contentType;
 
-    public Evidence (String filePath) throws IOException {
+    public Evidence(String filePath) throws IOException {
         attachment = new File(filePath);
         processAttachment();
     }
 
-    public Evidence (String fileName, String filePath) throws IOException {
+    public Evidence(String fileName, String filePath) throws IOException {
         attachment = new File(filePath);
         this.fileName = fileName;
         processAttachment();

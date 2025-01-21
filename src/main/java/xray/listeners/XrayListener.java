@@ -29,19 +29,19 @@ public class XrayListener implements IInvokedMethodListener, ITestListener {
 
         if (method.isTestMethod()) {
             testDescription = method.getTestMethod().getConstructorOrMethod().getMethod()
-                .getAnnotation(Test.class).description();
+                    .getAnnotation(Test.class).description();
             if (annotationPresent(method, XrayTest.class)) {
                 xrayTestDescription = method.getTestMethod().getConstructorOrMethod().getMethod()
-                    .getAnnotation(XrayTest.class).description();
+                        .getAnnotation(XrayTest.class).description();
                 xrayTestSummary = method.getTestMethod().getConstructorOrMethod().getMethod()
-                    .getAnnotation(XrayTest.class).summary();
+                        .getAnnotation(XrayTest.class).summary();
 
                 testResult.setAttribute("test",
-                    method.getTestMethod().getConstructorOrMethod().getMethod()
-                        .getAnnotation(XrayTest.class).key());
+                        method.getTestMethod().getConstructorOrMethod().getMethod()
+                                .getAnnotation(XrayTest.class).key());
                 testResult.setAttribute("labels",
-                    method.getTestMethod().getConstructorOrMethod().getMethod()
-                        .getAnnotation(XrayTest.class).labels());
+                        method.getTestMethod().getConstructorOrMethod().getMethod()
+                                .getAnnotation(XrayTest.class).labels());
             }
 
             if (!emptyString(xrayTestSummary)) {
@@ -71,9 +71,9 @@ public class XrayListener implements IInvokedMethodListener, ITestListener {
 
     private boolean annotationPresent(IInvokedMethod method, Class annotationClass) {
         boolean retVal =
-            method.getTestMethod().getConstructorOrMethod().getMethod()
-                .isAnnotationPresent(annotationClass);
-        System.out.println("Annotation "+ retVal);
+                method.getTestMethod().getConstructorOrMethod().getMethod()
+                        .isAnnotationPresent(annotationClass);
+        System.out.println("Annotation " + retVal);
         return retVal;
     }
 

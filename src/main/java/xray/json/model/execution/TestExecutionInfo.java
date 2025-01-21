@@ -1,15 +1,17 @@
 package xray.json.model.execution;
 
-import static xray.Constants.DATE_TIME_FORMAT;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter
+import java.util.Date;
+
+import static xray.commons.Constants.DATE_TIME_FORMAT;
+
+@Getter
+@Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TestExecutionInfo {
     @JsonProperty(required = true, value = "project")
@@ -29,7 +31,7 @@ public class TestExecutionInfo {
     private String testEnvironments;
     //custom fields
 
-    public TestExecutionInfo (String projectKey, Date startDate, Date endDate ) {
+    public TestExecutionInfo(String projectKey, Date startDate, Date endDate) {
         this.projectKey = projectKey;
         this.startDate = startDate;
         this.endDate = endDate;

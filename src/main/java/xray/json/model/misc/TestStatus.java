@@ -10,6 +10,7 @@ public enum TestStatus {
     //KNOWN_FAILURE
 
     private final int testNgStatus;
+
     TestStatus(int testNgStatus) {
         this.testNgStatus = testNgStatus;
     }

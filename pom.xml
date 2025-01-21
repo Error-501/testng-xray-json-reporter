@@ -13,7 +13,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
     <json-schema-validator.version>1.0.76</json-schema-validator.version>
-    <feign.version>10.2.3</feign.version>
+    <feign.version>13.1</feign.version>
   </properties>
 
    <dependencies>
@@ -73,12 +73,6 @@
        <artifactId>feign-form</artifactId>
        <version>3.8.0</version>
      </dependency>
-     <dependency>
-       <groupId>io.github.openfeign.form</groupId>
-       <artifactId>feign-form-spring</artifactId>
-       <version>3.8.0</version>
-     </dependency>
-
   </dependencies>
   <build>
     <pluginManagement>

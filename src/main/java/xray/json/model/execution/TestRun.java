@@ -1,18 +1,17 @@
 package xray.json.model.execution;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.time.LocalDate;
-import java.util.List;
-
 import lombok.Getter;
 import lombok.Setter;
 import xray.json.model.misc.CustomField;
 import xray.json.model.misc.Evidence;
-import xray.json.model.misc.TestStatus;
 import xray.json.model.test.Iteration;
 import xray.json.model.test.TestCase;
 
-@Getter @Setter
+import java.util.List;
+
+@Getter
+@Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TestRun {
     private String testKey;

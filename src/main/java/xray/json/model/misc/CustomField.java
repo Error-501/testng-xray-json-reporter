@@ -8,12 +8,12 @@ import lombok.Getter;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CustomField {
-        private String id;
-        private String name;
-        private Object value;
+    private String id;
+    private String name;
+    private Object value;
 
-        public CustomField(String id, Object value) {
-                this.id = name;
-                this.value = value;
-        }
+    public CustomField(String id, Object value) {
+        this.id = id;
+        this.value = value;
+    }
 }
