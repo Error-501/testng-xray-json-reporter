@@ -1,6 +1,7 @@
 package xray;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import xray.api.handler.JiraApiHandler;
@@ -34,6 +35,12 @@ public class JiraApiUnitTest {
         CreateIssueResp issueResp =  jiraApiHandler.createIssue(execInfo.getPath());
         System.out.println(issueResp.getExecIssueKey());
         Assert.assertNotNull(issueResp.getExecIssueKey());
+    }
+
+    @Test
+    public void testGetIssue() throws IOException {
+        JsonObject issueResp = jiraApiHandler.getIssue("AUTO-30");
+        Assert.assertNotNull(issueResp);
     }
 
     @Test

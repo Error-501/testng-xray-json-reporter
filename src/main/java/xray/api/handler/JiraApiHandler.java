@@ -1,7 +1,9 @@
 package xray.api.handler;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import feign.Response;
 import lombok.Getter;
 import xray.api.client.Jira;
 import xray.api.config.FeignController;
@@ -10,6 +12,7 @@ import xray.json.model.api.CreateIssueResp;
 
 import java.io.IOException;
 import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
@@ -32,6 +35,7 @@ public class JiraApiHandler {
     private final Map<String, Object> formHeader = new HashMap<>() {{
         put("X-Atlassian-Token", "no-check");
     }};
+    private final Gson gson =  new Gson();
 
 
     private JiraApiHandler(String projectKey) {
@@ -66,6 +70,20 @@ public class JiraApiHandler {
             throw new IOException("Jira json Report: " + issueFieldsPath + " is not found");
         }
         return createIssueResp;
+    }
+
+    public JsonObject getIssue(String issueKey) throws IOException {
+        Response response = jiraFileApi.getIssue(globalHeaders, issueKey);
+        if (response.status() == 200) {
+            return gson.toJsonTree(response.body()
+                    .asReader(Charset.defaultCharset())).getAsJsonObject();
+        }
+        return null;
+    }
+
+    public boolean isIssueValid(String issueKey) {
+        Response response = jiraFileApi.getIssue(globalHeaders, issueKey);
+        return response.status() == 200;
     }
 
     /**

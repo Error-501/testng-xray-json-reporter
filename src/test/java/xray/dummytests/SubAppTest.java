@@ -14,7 +14,8 @@ public class SubAppTest {
     }
 
     @Test(dataProvider = "numbers", groups = {"AddNumbers_UT"})
-    public void CanSubNumbersDataProvider(int number, boolean expected) {
+    public void CanSubNumbersDataProvider(int number, boolean expected) throws InterruptedException {
+        Thread.sleep(1000);
         assertEquals(number % 2 == 0, expected);
     }
 }

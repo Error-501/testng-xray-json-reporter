@@ -61,8 +61,6 @@ public class XrayApiHandler {
         Path execInfo = Path.of(execInfoFilePath);
         Map<String, Object> headers = new HashMap<>();
         if (report.toFile().exists() && execInfo.toFile().exists()) {
-            String contentType = URLConnection.guessContentTypeFromName(String.valueOf(report.getFileName()));
-            headers.put("Content-Type", contentType);
             headers.put("Authorization", AUTH_TOKEN);
             response = xrayCloudFormApi.importMultiPartExecution(
                     headers, report.toFile(), execInfo.toFile());

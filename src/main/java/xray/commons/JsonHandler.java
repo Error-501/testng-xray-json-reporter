@@ -64,7 +64,6 @@ public class JsonHandler {
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputJson))) {
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(writer, obj);
-            writer.flush();
         } catch (IOException e) {
             //TODO Logger
             System.err.println("Error in BufferedWriter due to " + e);

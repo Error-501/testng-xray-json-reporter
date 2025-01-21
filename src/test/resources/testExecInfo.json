@@ -7,12 +7,12 @@
         "issuetype": {
             "name": "Test Execution"
         },
-        "components" : [
+        "components": [
             {
-            "name":"Interface"
+                "name": "Interface"
             },
             {
-            "name":"Core"
+                "name": "Core"
             }
         ]
     }

@@ -6,6 +6,7 @@ public class Constants {
     public static final String REPORT_EXEC_INFO_FILENAME = "execInfoFileName";
     public static final String PROJECT_KEY = "projectKey";
     public static final String TEST_EXECUTION_KEY = "testExecutionKey";
+    public static final String TEST_PLAN_KEY = "testPlanKey";
     public static final String TEST_EXECUTION_SUMMARY = "executionSummary";
     public static final String TEST_EXECUTION_DESCRIPTION = "executionDescription";
     public static final String TEST_EXECUTION_VERSION = "version";

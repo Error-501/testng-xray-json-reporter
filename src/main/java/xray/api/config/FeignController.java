@@ -2,7 +2,6 @@ package xray.api.config;
 
 import feign.Feign;
 import feign.Logger;
-import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -14,7 +13,6 @@ import feign.slf4j.Slf4jLogger;
 
 import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -40,7 +38,6 @@ public class FeignController {
                 .logLevel(Logger.Level.FULL)
                 .errorDecoder(new XrayErrorDecoder())
                 .retryer(new XrayRetryer())
-                .options(new Request.Options(100, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, false))
                 .target(clientClass, endPoint);
     }
 

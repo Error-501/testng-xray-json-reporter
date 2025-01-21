@@ -1,5 +1,6 @@
 package xray.listeners;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.testng.*;
 import org.testng.annotations.Test;
@@ -57,9 +58,9 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
             testExecutionInfo =
                     new TestExecutionInfo(get(PROJECT_KEY), executionStartDate, executionEndDate);
             setTestExecutionInfoProps();
-        } else if (isNotBlank(get(TEST_EXECUTION_KEY))) {
-            throw new IllegalArgumentException("projectKey or TestExecution Key must " +
-                    "be specified in Xray.properties to create XRAY JSON Reports");
+        } else {
+            throw new IllegalArgumentException("JIRA Project Key must " +
+                    "be specified in Xray.properties to generate XRAY JSON Reports");
         }
 
         HashMap<String, ArrayList<ITestResult>> testResults = getTestResultsFromSuite(suites);
@@ -73,7 +74,10 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
         }
 
         try {
-            testExecution.setTextExecutionKey(getIfBlank(get(TEST_EXECUTION_KEY), () -> null));
+            String testExecutionKey = StringUtils.isNotBlank(get(TEST_EXECUTION_KEY)) &&
+                    getJiraApiHandler(get(PROJECT_KEY)).isIssueValid(get(TEST_EXECUTION_KEY))
+                    ? get(TEST_EXECUTION_KEY) : null;
+            testExecutionInfo.setTestPlanKey(testExecutionKey);
             testExecution.setTestExecutionInfo(testExecutionInfo);
             testExecution.setTests(tests);
             serializeReport(outputDirectory);
@@ -88,27 +92,34 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
         testExecutionInfo.setRevision(getIfBlank(get(TEST_EXECUTION_REVISION), () -> null));
         testExecutionInfo.setUser(getIfBlank(get(TEST_EXECUTION_USER), () -> null));
         testExecutionInfo.setVersion(getIfBlank(get(TEST_EXECUTION_VERSION), () -> null));
+        String testPlanKey = StringUtils.isNotBlank(get(TEST_PLAN_KEY)) &&
+                getJiraApiHandler(get(PROJECT_KEY)).isIssueValid(get(TEST_PLAN_KEY))
+                ? get(TEST_PLAN_KEY) : null;
+        testExecutionInfo.setTestPlanKey(testPlanKey);
     }
 
     private TestRun createTestRun(List<ITestResult> results) {
         TestRun testRun = new TestRun();
         ITestResult firstResult = results.get(0);
         Method testMethod = firstResult.getMethod().getConstructorOrMethod().getMethod();
-        if (testMethod.isAnnotationPresent(XrayTest.class)
-                && isNotBlank(testMethod.getAnnotation(XrayTest.class).key())) {
-            testRun.setTestKey(testMethod.getAnnotation(XrayTest.class).key());
+        if (testMethod.isAnnotationPresent(XrayTest.class)) {
+            String testKey = testMethod.getAnnotation(XrayTest.class).key();
+            if(StringUtils.isNotBlank(testKey) &&
+                    getJiraApiHandler(get(PROJECT_KEY)).isIssueValid(testKey)) {
+                testRun.setTestKey(testMethod.getAnnotation(XrayTest.class).key());
+            }
         }
         if (isBlank(testRun.getTestKey())) {
             testRun.setTestInfo(createTestCase(results, testMethod));
         }
-
+        long start = firstResult.getStartMillis();
+        long finish = firstResult.getEndMillis();
         int totalPassed = 0;
         int totalFailed = 0;
+
         //if test is not parameterized / data driven
         if (results.size() == 1) {
             ITestResult result = results.get(0);
-            testRun.setStart(dateFormatter.format(result.getStartMillis()));
-            testRun.setFinish(dateFormatter.format(result.getEndMillis()));
             testRun.setStatus(Objects.requireNonNull(
                     TestStatus.getStatus(result.getStatus())).name());
             Throwable throwable = result.getThrowable();
@@ -120,15 +131,11 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
                 totalPassed += 1;
             }
         } else {
-            // TODO: this should be based not on the first result but on the start & end time of all iterations
-            String start = dateFormatter.format(firstResult.getStartMillis());
-            String finish = dateFormatter.format(firstResult.getEndMillis());
-            testRun.setStart(start);
-            testRun.setStart(finish);
-
             List<Iteration> iterations = new ArrayList<>();
             int counter = 1;
             for (ITestResult result : results) {
+                start = Math.min(start, result.getStartMillis());
+                finish = Math.max(finish, result.getEndMillis());
                 Iteration iteration = new Iteration();
                 iteration.setName(getTestUniqueKey(testMethod,
                         result.getMethod().getQualifiedName())
@@ -189,6 +196,8 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
                         TestStatus.getStatus(ITestResult.SKIP)).name());
         }
         testRun.setCustomFields(getCustomIterationFields(totalPassed, totalFailed));
+        testRun.setStart(dateFormatter.format(start));
+        testRun.setFinish(dateFormatter.format(finish));
         return testRun;
     }
 
@@ -272,7 +281,7 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
         }
         testSummary += isNotBlank(xrayTestSummary) ? xrayTestSummary :
                 isNotBlank(xrayTestDescription) ? xrayTestDescription :
-                        isNotBlank(testNgDescription) ? testNgDescription : testName;
+                isNotBlank(testNgDescription) ? testNgDescription : testName;
         return uniqueTag.isPresent() ?
                 String.format("[%s] %s", uniqueTag.get(), testSummary) : testSummary;
     }
