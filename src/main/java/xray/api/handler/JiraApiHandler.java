@@ -1,7 +1,6 @@
 package xray.api.handler;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import xray.api.client.Jira;
@@ -69,6 +68,12 @@ public class JiraApiHandler {
         return createIssueResp;
     }
 
+    /**
+     * @param issueKey - Jira Issue ID to which the attachment needs to be added.
+     * @param attachmentPath - The absolute filepath to the attachment file.
+     * @return - Returns a generic gson JsonArray response.
+     *          ( Should deserialize with model if needed in future )
+     */
     public JsonArray addAttachment(String issueKey, String attachmentPath) throws IOException {
         JsonArray jsonResponse;
         Map<String, Object> headers = new HashMap<>(this.globalHeaders);

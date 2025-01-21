@@ -193,8 +193,8 @@ public class XrayJsonReporter implements IReporter, IExecutionListener {
     }
 
     private List<CustomField> getCustomIterationFields(int totalPassed, int totalFailed) {
-        CustomField iterationsPassed = new CustomField(null, ITERATIONS_PASSED_FIELD_NAME, totalPassed);
-        CustomField iterationsFailed = new CustomField(null, ITERATIONS_FAILED_FIELD_NAME, totalFailed);
+        CustomField iterationsPassed = new CustomField(null, get(ITERATIONS_PASSED_FIELD_NAME), totalPassed);
+        CustomField iterationsFailed = new CustomField(null, get(ITERATIONS_FAILED_FIELD_NAME), totalFailed);
         return Arrays.asList(iterationsPassed, iterationsFailed);
     }
 

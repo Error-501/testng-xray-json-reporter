@@ -13,6 +13,9 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.min;
 
+/**
+ * Implementation based on the Atlassian Rate Limiting Pseudo Code - <a href="https://developer.atlassian.com/cloud/jira/platform/rate-limiting/#response-handling-pseudo-code">Ref</a>
+ */
 @NoArgsConstructor
 public class XrayRetryer implements Retryer {
     private static final Logger LOG = LoggerFactory.getLogger(XrayRetryer.class);
